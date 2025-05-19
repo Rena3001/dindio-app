@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -13,16 +12,25 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('API Token')->plainTextToken;
-
-            return response()->json([
-                'token' => $token,
-                'user' => $user
-            ], 200);
+        if (!$token = auth('api')->attempt($credentials)) {
+            return response()->json(['error' => 'Email və ya şifrə yalnışdır'], 401);
         }
 
-        return response()->json(['error' => 'Unauthorized'], 401);
+        return response()->json([
+            'token' => $token,
+            'user' => auth('api')->user(),
+        ]);
+    }
+
+
+    public function logout()
+    {
+        Auth::guard('api')->logout();
+        return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    public function me()
+    {
+        return response()->json(Auth::guard('api')->user());
     }
 }
